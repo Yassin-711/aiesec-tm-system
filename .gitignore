@@ -1,0 +1,26 @@
+# AIESEC TM System - Git Ignore
+
+# Configuration files with sensitive URLs
+# Uncomment if you want to ignore config.js (users will need to create their own)
+# web/config.js
+
+# OS files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Editor files
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# Logs
+*.log
+npm-debug.log*
+
+# Temporary files
+*.tmp
+*.temp
+

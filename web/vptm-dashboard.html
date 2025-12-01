@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>VP TM Dashboard - AIESEC TM System</title>
+    <link rel="stylesheet" href="styles.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="dashboard-wrapper">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar" id="sidebar">
+            <div class="sidebar-header">
+                <div class="logo-container">
+                    <i class="fas fa-users-cog"></i>
+                    <h2>AIESEC TM</h2>
+                </div>
+            </div>
+            <nav class="sidebar-nav" id="dashboardNav">
+                <a href="vptm-dashboard.html" class="nav-item active">
+                    <i class="fas fa-chart-line"></i>
+                    <span>VP TM Dashboard</span>
+                </a>
+                <a href="tl-dashboard.html" class="nav-item">
+                    <i class="fas fa-user-tie"></i>
+                    <span>Team Leader</span>
+                </a>
+                <a href="member-dashboard.html" class="nav-item">
+                    <i class="fas fa-user"></i>
+                    <span>Member</span>
+                </a>
+            </nav>
+            <div class="sidebar-footer">
+                <button class="btn-logout" onclick="logout()">
+                    <i class="fas fa-sign-out-alt"></i>
+                    <span>Logout</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="main-content">
+            <!-- Top Bar -->
+            <header class="top-bar">
+                <div class="top-bar-left">
+                    <h1><i class="fas fa-tachometer-alt"></i> VP TM Dashboard</h1>
+                    <p class="subtitle">Local Committee Overview</p>
+                </div>
+                <div class="top-bar-right">
+                    <div class="user-info">
+                        <span id="userName">Loading...</span>
+                        <i class="fas fa-user-circle"></i>
+                    </div>
+                </div>
+            </header>
+
+            <!-- Stats Cards -->
+            <div class="stats-grid">
+                <div class="stat-card stat-primary">
+                    <div class="stat-icon">
+                        <i class="fas fa-users"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Active Members</h3>
+                        <div class="stat-value" id="totalMembers">0</div>
+                        <div class="stat-change positive">
+                            <i class="fas fa-arrow-up"></i> All functions
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-info">
+                    <div class="stat-icon">
+                        <i class="fas fa-user-tie"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Team Leaders</h3>
+                        <div class="stat-value" id="totalTLs">0</div>
+                        <div class="stat-change">
+                            <i class="fas fa-info-circle"></i> Across all functions
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-success">
+                    <div class="stat-icon">
+                        <i class="fas fa-calendar-check"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Overall Attendance</h3>
+                        <div class="stat-value" id="overallAttendance">0%</div>
+                        <div class="stat-change positive" id="attendanceChange">
+                            <i class="fas fa-arrow-up"></i> LC Average
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-warning">
+                    <div class="stat-icon">
+                        <i class="fas fa-heartbeat"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>Overall Pulse</h3>
+                        <div class="stat-value" id="overallPulse">0.0</div>
+                        <div class="stat-change">
+                            <i class="fas fa-chart-line"></i> Last 4 weeks
+                        </div>
+                    </div>
+                </div>
+
+                <div class="stat-card stat-danger">
+                    <div class="stat-icon">
+                        <i class="fas fa-exclamation-triangle"></i>
+                    </div>
+                    <div class="stat-content">
+                        <h3>At-Risk Members</h3>
+                        <div class="stat-value" id="atRiskTotal">0</div>
+                        <div class="stat-change negative">
+                            <i class="fas fa-arrow-down"></i> Needs attention
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Charts Row -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-bar"></i> Function Performance Comparison</h3>
+                        <div class="chart-legend">
+                            <span class="legend-item"><span class="legend-color" style="background: #3b82f6;"></span> Attendance</span>
+                            <span class="legend-item"><span class="legend-color" style="background: #10b981;"></span> Pulse</span>
+                        </div>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="functionChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-pie"></i> Engagement Status</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="engagementChart"></canvas>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Function Breakdown Table -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-table"></i> Function Performance Breakdown</h2>
+                    <button class="btn-icon" onclick="refreshData()" title="Refresh Data">
+                        <i class="fas fa-sync-alt"></i>
+                    </button>
+                </div>
+                <div class="table-wrapper">
+                    <table class="modern-table">
+                        <thead>
+                            <tr>
+                                <th>Function</th>
+                                <th>Members</th>
+                                <th>Avg Attendance</th>
+                                <th>Avg Pulse</th>
+                                <th>Task Score</th>
+                                <th>At-Risk</th>
+                                <th>Status</th>
+                                <th>Actions</th>
+                            </tr>
+                        </thead>
+                        <tbody id="functionTable">
+                            <tr>
+                                <td colspan="8" class="loading-cell">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading data...
+                                </td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+
+            <!-- At-Risk Members Section -->
+            <div class="section-card">
+                <div class="section-header">
+                    <h2><i class="fas fa-exclamation-circle"></i> At-Risk Members</h2>
+                    <span class="badge badge-danger" id="atRiskBadge">0</span>
+                </div>
+                <div id="atRiskMembersList" class="at-risk-grid">
+                    <div class="loading-placeholder">
+                        <i class="fas fa-spinner fa-spin"></i> Loading...
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity / Trends -->
+            <div class="charts-row">
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-line"></i> Attendance Trend (Last 4 Weeks)</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="attendanceTrendChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="chart-card">
+                    <div class="chart-header">
+                        <h3><i class="fas fa-chart-area"></i> Pulse Trend (Last 4 Weeks)</h3>
+                    </div>
+                    <div class="chart-body">
+                        <canvas id="pulseTrendChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+
+    <script src="config.js"></script>
+    <script src="app.js"></script>
+    <script>
+        // APPS_SCRIPT_URL is already declared in app.js, just use it
+        // Check access
+        const isVPTM = sessionStorage.getItem('isVPTM') === 'true';
+        const hasFullAccess = sessionStorage.getItem('hasFullAccess') === 'true';
+        const roleType = sessionStorage.getItem('roleType');
+        const memberFunction = sessionStorage.getItem('memberFunction');
+        const userName = sessionStorage.getItem('memberName') || 'User';
+        
+        // Set user name
+        document.getElementById('userName').textContent = userName;
+        
+        // Allow access for: VP TM OR TM Team Leader
+        const canAccess = isVPTM || hasFullAccess || 
+                         (roleType === 'Team Leader' && memberFunction === 'TM');
+        
+        if (!canAccess) {
+            window.location.href = 'index.html';
+        }
+
+        // Show navigation for users with full access
+        if (hasFullAccess || isVPTM || (roleType === 'Team Leader' && memberFunction === 'TM')) {
+            // Navigation is already in HTML
+        } else {
+            // Hide navigation if no full access
+            document.getElementById('dashboardNav').style.display = 'none';
+        }
+
+        let functionChart, engagementChart, attendanceTrendChart, pulseTrendChart;
+
+        // Load data on page load
+        loadVPTMData();
+
+        async function loadVPTMData() {
+            try {
+                showLoading();
+                const response = await fetch(APPS_SCRIPT_URL + '?action=getVPTMDashboard');
+                
+                if (!response.ok) {
+                    throw new Error('Network response was not ok');
+                }
+                
+                const result = await response.json();
+                
+                if (result.success) {
+                    const data = result.data;
+                    updateDashboard(data);
+                    createCharts(data);
+                } else {
+                    showError('Failed to load data: ' + (result.message || 'Unknown error'));
+                }
+            } catch (error) {
+                console.error('Error loading VP TM data:', error);
+                showError('Error connecting to server. Please check your Apps Script URL.');
+            }
+        }
+
+        function updateDashboard(data) {
+            // Update stat cards
+            document.getElementById('totalMembers').textContent = data.totalActiveMembers || 0;
+            document.getElementById('totalTLs').textContent = data.totalTeamLeaders || 0;
+            document.getElementById('overallAttendance').textContent = (data.overallAttendance || 0).toFixed(1) + '%';
+            document.getElementById('overallPulse').textContent = (data.overallPulse || 0).toFixed(1);
+            document.getElementById('atRiskTotal').textContent = data.atRiskCount || 0;
+            document.getElementById('atRiskBadge').textContent = data.atRiskCount || 0;
+
+            // Populate function table
+            const functionTable = document.getElementById('functionTable');
+            if (data.functionStats && data.functionStats.length > 0) {
+                functionTable.innerHTML = data.functionStats.map(func => {
+                    const statusClass = func.avgAttendance >= 80 ? 'status-success' : 
+                                      func.avgAttendance >= 60 ? 'status-warning' : 'status-danger';
+                    const statusIcon = func.avgAttendance >= 80 ? 'fa-check-circle' : 
+                                      func.avgAttendance >= 60 ? 'fa-exclamation-circle' : 'fa-times-circle';
+                    
+                    return `
+                        <tr>
+                            <td><strong>${func.function}</strong></td>
+                            <td><span class="badge badge-info">${func.memberCount}</span></td>
+                            <td>${(func.avgAttendance || 0).toFixed(1)}%</td>
+                            <td>${(func.avgPulse || 0).toFixed(1)}</td>
+                            <td>${(func.avgPerformance || 0).toFixed(1)}</td>
+                            <td><span class="badge ${func.atRiskCount > 0 ? 'badge-danger' : 'badge-success'}">${func.atRiskCount}</span></td>
+                            <td><span class="status-badge ${statusClass}"><i class="fas ${statusIcon}"></i></span></td>
+                            <td><button class="btn btn-small btn-primary" onclick="viewFunction('${func.function}')">View</button></td>
+                        </tr>
+                    `;
+                }).join('');
+            } else {
+                functionTable.innerHTML = '<tr><td colspan="8" class="empty-cell">No function data available</td></tr>';
+            }
+
+            // Populate at-risk members
+            const atRiskList = document.getElementById('atRiskMembersList');
+            if (data.atRiskMembers && data.atRiskMembers.length > 0) {
+                atRiskList.innerHTML = data.atRiskMembers.map(m => `
+                    <div class="at-risk-card">
+                        <div class="at-risk-header">
+                            <div class="at-risk-avatar">
+                                <i class="fas fa-user"></i>
+                            </div>
+                            <div class="at-risk-info">
+                                <h4>${m.name}</h4>
+                                <p>${m.function} • ${m.teamLeader}</p>
+                            </div>
+                        </div>
+                        <div class="at-risk-metrics">
+                            <div class="metric">
+                                <span class="metric-label">Attendance</span>
+                                <span class="metric-value danger">${(m.attendancePercent || 0).toFixed(1)}%</span>
+                            </div>
+                            <div class="metric">
+                                <span class="metric-label">Pulse</span>
+                                <span class="metric-value danger">${(m.pulseScore || 0).toFixed(1)}</span>
+                            </div>
+                        </div>
+                        <button class="btn btn-small btn-primary" onclick="viewMember('${m.memberId || ''}')">View Details</button>
+                    </div>
+                `).join('');
+            } else {
+                atRiskList.innerHTML = '<div class="empty-state"><i class="fas fa-check-circle"></i><p>No at-risk members. Great job!</p></div>';
+            }
+        }
+
+        function createCharts(data) {
+            // Function Comparison Chart
+            const functionCtx = document.getElementById('functionChart').getContext('2d');
+            if (functionChart) functionChart.destroy();
+            
+            functionChart = new Chart(functionCtx, {
+                type: 'bar',
+                data: {
+                    labels: data.functionStats.map(f => f.function),
+                    datasets: [
+                        {
+                            label: 'Avg Attendance %',
+                            data: data.functionStats.map(f => f.avgAttendance || 0),
+                            backgroundColor: 'rgba(59, 130, 246, 0.8)',
+                            borderColor: 'rgba(59, 130, 246, 1)',
+                            borderWidth: 2
+                        },
+                        {
+                            label: 'Avg Pulse Score',
+                            data: data.functionStats.map(f => (f.avgPulse || 0) * 20), // Scale to 0-100 for comparison
+                            backgroundColor: 'rgba(16, 185, 129, 0.8)',
+                            borderColor: 'rgba(16, 185, 129, 1)',
+                            borderWidth: 2
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'top',
+                        },
+                        tooltip: {
+                            callbacks: {
+                                label: function(context) {
+                                    if (context.datasetIndex === 1) {
+                                        return 'Avg Pulse: ' + (context.parsed.y / 20).toFixed(1);
+                                    }
+                                    return context.dataset.label + ': ' + context.parsed.y.toFixed(1) + '%';
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100,
+                            ticks: {
+                                callback: function(value) {
+                                    if (this.scale.id === 'y' && this.chart.data.datasets[1]) {
+                                        return value / 20;
+                                    }
+                                    return value + '%';
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+
+            // Engagement Status Chart
+            const engagementCtx = document.getElementById('engagementChart').getContext('2d');
+            if (engagementChart) engagementChart.destroy();
+            
+            const greenCount = data.totalActiveMembers - data.atRiskCount;
+            const yellowCount = 0; // Calculate from data if available
+            const redCount = data.atRiskCount;
+            
+            engagementChart = new Chart(engagementCtx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Green (Healthy)', 'Yellow (Warning)', 'Red (At-Risk)'],
+                    datasets: [{
+                        data: [greenCount, yellowCount, redCount],
+                        backgroundColor: [
+                            'rgba(16, 185, 129, 0.8)',
+                            'rgba(251, 191, 36, 0.8)',
+                            'rgba(239, 68, 68, 0.8)'
+                        ],
+                        borderColor: [
+                            'rgba(16, 185, 129, 1)',
+                            'rgba(251, 191, 36, 1)',
+                            'rgba(239, 68, 68, 1)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            position: 'bottom',
+                        }
+                    }
+                }
+            });
+
+            // Attendance Trend Chart (placeholder - would need historical data)
+            const attendanceTrendCtx = document.getElementById('attendanceTrendChart').getContext('2d');
+            if (attendanceTrendChart) attendanceTrendChart.destroy();
+            
+            // Mock data for trend - replace with actual historical data
+            const weeks = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
+            attendanceTrendChart = new Chart(attendanceTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'LC Average Attendance %',
+                        data: [75, 78, 80, data.overallAttendance || 0],
+                        borderColor: 'rgba(59, 130, 246, 1)',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+
+            // Pulse Trend Chart
+            const pulseTrendCtx = document.getElementById('pulseTrendChart').getContext('2d');
+            if (pulseTrendChart) pulseTrendChart.destroy();
+            
+            pulseTrendChart = new Chart(pulseTrendCtx, {
+                type: 'line',
+                data: {
+                    labels: weeks,
+                    datasets: [{
+                        label: 'LC Average Pulse',
+                        data: [3.5, 3.7, 3.8, data.overallPulse || 0],
+                        borderColor: 'rgba(16, 185, 129, 1)',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4,
+                        fill: true
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 5
+                        }
+                    }
+                }
+            });
+        }
+
+        function showLoading() {
+            document.getElementById('functionTable').innerHTML = 
+                '<tr><td colspan="8" class="loading-cell"><i class="fas fa-spinner fa-spin"></i> Loading...</td></tr>';
+        }
+
+        function showError(message) {
+            document.getElementById('functionTable').innerHTML = 
+                `<tr><td colspan="8" class="error-cell"><i class="fas fa-exclamation-triangle"></i> ${message}</td></tr>`;
+        }
+
+        function refreshData() {
+            loadVPTMData();
+        }
+
+        function viewFunction(functionName) {
+            alert('Viewing details for ' + functionName + ' function');
+            // Implement function detail view
+        }
+
+        function viewMember(memberId) {
+            alert('Viewing details for member: ' + memberId);
+            // Implement member detail view
+        }
+
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                sessionStorage.clear();
+                window.location.href = 'index.html';
+            }
+        }
+    </script>
+</body>
+</html>
