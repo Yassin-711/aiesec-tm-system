@@ -1,0 +1,226 @@
+<!-- AttendanceForm.html - For Google Apps Script HTML Service -->
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #037ef3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0268d1;
+        }
+        .success {
+            color: green;
+            margin-top: 15px;
+        }
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>AIESEC Attendance Check-in</h2>
+    <div id="message"></div>
+    <form id="attendanceForm">
+        <div class="form-group">
+            <label>Member ID</label>
+            <input type="text" id="memberId" required>
+        </div>
+        <div class="form-group">
+            <label>Meeting ID</label>
+            <input type="text" id="meetingId" required>
+        </div>
+        <button type="submit">Check In</button>
+    </form>
+
+    <script>
+        // Get meeting ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const meetingId = urlParams.get('meeting');
+        if (meetingId) {
+            document.getElementById('meetingId').value = meetingId;
+        }
+
+        document.getElementById('attendanceForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const memberId = document.getElementById('memberId').value.trim().toUpperCase();
+            const meetingId = document.getElementById('meetingId').value.trim().toUpperCase();
+            
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    const messageDiv = document.getElementById('message');
+                    if (result.success) {
+                        messageDiv.innerHTML = '<div class="success">' + result.message + '</div>';
+                        document.getElementById('attendanceForm').reset();
+                    } else {
+                        messageDiv.innerHTML = '<div class="error">' + result.message + '</div>';
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    document.getElementById('message').innerHTML = 
+                        '<div class="error">Error: ' + error.message + '</div>';
+                })
+                .logAttendance(memberId, meetingId);
+        });
+    </script>
+</body>
+</html>
+
+<!-- PulseForm.html - For Google Apps Script HTML Service -->
+<!DOCTYPE html>
+<html>
+<head>
+    <base target="_top">
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 500px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .form-group {
+            margin-bottom: 15px;
+        }
+        label {
+            display: block;
+            margin-bottom: 5px;
+            font-weight: bold;
+        }
+        input, select {
+            width: 100%;
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 5px;
+        }
+        button {
+            background: #037ef3;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-size: 16px;
+        }
+        button:hover {
+            background: #0268d1;
+        }
+        .success {
+            color: green;
+            margin-top: 15px;
+        }
+        .error {
+            color: red;
+            margin-top: 15px;
+        }
+    </style>
+</head>
+<body>
+    <h2>AIESEC Weekly Pulse Check-in</h2>
+    <div id="message"></div>
+    <form id="pulseForm">
+        <div class="form-group">
+            <label>Member ID</label>
+            <input type="text" id="memberId" required>
+        </div>
+        <div class="form-group">
+            <label>How are you feeling? (1-5)</label>
+            <select id="feeling" required>
+                <option value="">Select...</option>
+                <option value="1">1 - Very Poor</option>
+                <option value="2">2 - Poor</option>
+                <option value="3">3 - Neutral</option>
+                <option value="4">4 - Good</option>
+                <option value="5">5 - Excellent</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>How is your workload? (1-5)</label>
+            <select id="workload" required>
+                <option value="">Select...</option>
+                <option value="1">1 - Too Light</option>
+                <option value="2">2 - Light</option>
+                <option value="3">3 - Balanced</option>
+                <option value="4">4 - Heavy</option>
+                <option value="5">5 - Overwhelming</option>
+            </select>
+        </div>
+        <div class="form-group">
+            <label>Hours Delivered This Week</label>
+            <input type="number" id="hours" min="0" step="0.5" required>
+        </div>
+        <div class="form-group">
+            <label>Are you thinking about leaving?</label>
+            <select id="thinkingLeaving" required>
+                <option value="No">No</option>
+                <option value="Yes">Yes</option>
+            </select>
+        </div>
+        <button type="submit">Submit Pulse</button>
+    </form>
+
+    <script>
+        // Get member ID from URL parameter
+        const urlParams = new URLSearchParams(window.location.search);
+        const memberId = urlParams.get('id');
+        if (memberId) {
+            document.getElementById('memberId').value = memberId;
+        }
+
+        document.getElementById('pulseForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const memberId = document.getElementById('memberId').value.trim().toUpperCase();
+            const feeling = document.getElementById('feeling').value;
+            const workload = document.getElementById('workload').value;
+            const hours = document.getElementById('hours').value;
+            const thinkingLeaving = document.getElementById('thinkingLeaving').value;
+            
+            google.script.run
+                .withSuccessHandler(function(result) {
+                    const messageDiv = document.getElementById('message');
+                    if (result.success) {
+                        messageDiv.innerHTML = '<div class="success">' + result.message + '</div>';
+                        document.getElementById('pulseForm').reset();
+                    } else {
+                        messageDiv.innerHTML = '<div class="error">' + result.message + '</div>';
+                    }
+                })
+                .withFailureHandler(function(error) {
+                    document.getElementById('message').innerHTML = 
+                        '<div class="error">Error: ' + error.message + '</div>';
+                })
+                .submitPulse(memberId, feeling, workload, hours, thinkingLeaving);
+        });
+    </script>
+</body>
+</html>
+
