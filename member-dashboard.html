@@ -132,11 +132,13 @@
         }
 
         function openAttendanceForm() {
-            window.open(APPS_SCRIPT_URL + '?page=attendance&memberId=' + memberId, '_blank');
+            // Open the standalone attendance form page
+            window.open('attendance-form.html?memberId=' + memberId, '_blank', 'width=600,height=700');
         }
 
         function openPulseForm() {
-            window.open(APPS_SCRIPT_URL + '?page=pulse&memberId=' + memberId, '_blank');
+            // Open the standalone pulse form page
+            window.open('pulse-form.html?id=' + memberId, '_blank', 'width=700,height=900');
         }
 
         function logout() {
